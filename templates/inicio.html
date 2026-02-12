@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- From Uiverse.io by alexruix --> 
+<div class="form-box">
+    <form class="form" method="POST">
+        <span class="title">Bienvenido!</span>
+        <div class="form-container">
+            {{form.csrf_token}}
+            {% for campo in form %}
+                {{campo(class_="input")}}
+            {% endfor %}
+        </div>
+        <button>inicio</button>
+        <span class="subtitle">No tiene cuenta? <a href="{{url_for('Crear_Cuenta')}}">click aqui</a></span> 
+    </form>
+</div>
+{% endblock content %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-box">
+    <form class="form" method="POST">
+        <span class="title">Agregar Dispositivo</span>
+        <span class="subtitle">Ingrese los datos del nuevo dispositivo</span>
+        
+        <div class="form-container">
+            {{ form.csrf_token }}
+            
+            <!-- Campo ID Modelo -->
+            <div class="campo-grupo">
+                {{ form.id_modelo(class="input", placeholder="Id del dispositivo") }}
+                {% if form.id_modelo.errors %}
+                    <div class="errores">
+                        {% for error in form.id_modelo.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Campo Código -->
+            <div class="campo-grupo">
+                {{ form.codigo(class="input", placeholder="Codigo maestro") }}
+                {% if form.codigo.errors %}
+                    <div class="errores">
+                        {% for error in form.codigo.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Campo Nombre -->
+            <div class="campo-grupo">
+                {{ form.nombre(class="input", placeholder="Alias para el dispositivo") }}
+                {% if form.nombre.errors %}
+                    <div class="errores">
+                        {% for error in form.nombre.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <button type="submit">Agregar Dispositivo</button>
+    </form>
+</div>
+{% endblock content %}

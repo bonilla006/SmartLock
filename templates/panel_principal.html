@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="contenedor-masdispositivo">
+        <a href="{{ url_for('Nuevo_Dispositivo')}}">
+           <img width="85px" height="85px" src="{{ url_for('static', filename='image/icons8-plus-128.png') }}" alt="Agregar Dispositivo">
+        </a>
+    </div>
+    
+    <div class="contenedor-contenido">
+        {% if context %}
+            {% for dispositivo in context %}
+                <div class="dispositivo-acordeon">
+                    <div class="tab">
+                        <!-- Radio button para controlar el acordeón -->
+                        <input type="radio" 
+                               name="dispositivos-acordeon" 
+                               id="dispositivo-{{ loop.index }}"
+                               {% if loop.first %}checked{% endif %}>
+                        
+                        <!-- Label que actúa como botón para abrir/cerrar -->
+                        <label for="dispositivo-{{ loop.index }}" class="tab__label">
+                            <div class="dispositivo-contenido-superior">
+                                <!-- Nombre del dispositivo -->
+                                <div class="nombre-dispositivo">
+                                    {{ dispositivo.nombre }}
+                                </div>
+                                
+                                <!-- Botón de bloqueo/desbloqueo -->
+                                <div class="estado-dispositivo">
+                                    {% if dispositivo.estado == "Desbloqueado" %}
+                                        <form action="{{ url_for('Bloquear_Dispositivo', rel_id=dispositivo.id) }}" method="POST" class="form-estado">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf }}">
+                                            <button type="submit" class="btn-estado">
+                                                <img class="icon" src="{{ url_for('static', filename='image/icons8-unlock-50.png') }}" alt="Bloquear Dispositivo">
+                                            </button>
+                                        </form>
+                                    {% elif dispositivo.estado == "Bloqueado" %}
+                                        <form action="{{ url_for('Desbloquear_Dispositivo', rel_id=dispositivo.id) }}" method="POST" class="form-estado">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf }}">
+                                            <button type="submit" class="btn-estado">
+                                                <img class="icon" src="{{ url_for('static', filename='image/icons8-lock-50.png') }}" alt="Desbloquear Dispositivo">
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <div class="estado-error">
+                                            <img class="icon" alt="Error Fatal" src="{{ url_for('static', filename='image/icons8-error-50.png') }}">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Carga del dispositivo -->
+                                <div class="carga-dispositivo">
+                                    {{ dispositivo.carga }}
+                                </div>
+                            </div>
+                        </label>
+                        
+                        <!-- Contenido expandible -->
+                        <div class="tab__content">
+                            <div class="detalles-dispositivo">
+                                {% if dispositivo.logs %}
+                                    {% for log in dispositivo.logs %}
+                                        {{log.fecha}}::{{log.tiempo}}::{{log.accion}}::{{log.acceso}}<br><br>
+                                    {% endfor %}
+                                    <form action="{{ url_for('All_Logs', rel_id=dispositivo.id) }}" method="POST" style="display: inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf }}">
+                                        <button type="submit" style="
+                                            background: none;
+                                            border: none;
+                                            padding: 0;
+                                            color: black;
+                                            text-decoration: none;
+                                            cursor: pointer;
+                                            font: inherit;
+                                        ">ver más</button>
+                                    </form>
+
+                                {% else %}
+                                     <div class="dispositivo-acordeon" style="justify-content:center; padding: 30px;">
+                                        <h3 style="margin: 0; color: #6b7280;">No tiene dispositivos en esta cuenta</h3>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="dispositivo-acordeon" style="justify-content:center; padding: 30px;">
+                <h3 style="margin: 0; color: #6b7280;">No tiene dispositivos en esta cuenta</h3>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Tus modales y scripts existentes -->
+    <div id="nuevo-dispositivo" class="modal">
+        <div class="modal-contenido">
+            <span class="close" onclick="closeModal()">&times;</span>
+            ingresar la informacion de <a href="{{ url_for('Nuevo_Dispositivo') }}">forma manual</a>
+        <div>
+    </div> 
+    
+    
+    <script>
+        function open_NuevoDispositivo() { 
+            document.getElementById('nuevo-dispositivo').style.display = 'block'; 
+        }
+        
+        function closeModal() { 
+            document.getElementById('nuevo-dispositivo').style.display = 'none'; 
+        }
+    </script>
+{% endblock content %}

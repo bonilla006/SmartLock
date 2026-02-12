@@ -1,0 +1,526 @@
+body{
+  background-color: #374151 !important;
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Estilos base para todos los dispositivos */
+.contenedor-principal{
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/*--------------------------------------------------------------------*/
+
+
+/* From Uiverse.io by alexruix */ 
+/*Estilo para el formulario/input/botones*/
+.form-box {
+  max-width: 90%;
+  background: #f1f7fe;
+  overflow: hidden;
+  border-radius: 16px;
+  color: #010101;
+  margin: 10% auto;
+}
+
+.form {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 32px 24px 24px;
+  gap: 16px;
+  text-align: center;
+}
+
+/*Form text*/
+.title {
+  font-weight: bold;
+  font-size: 1.6rem;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #666;
+}
+
+/*Inputs box*/
+.form-container {
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: #fff;
+  margin: 1rem 0 .5rem;
+  width: 100%;
+}
+
+.input {
+  background: none;
+  border: 0;
+  outline: 0;
+  height: 40px;
+  width: 100%;
+  border-bottom: 1px solid #eee;
+  font-size: .9rem;
+  padding: 8px 15px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+/* Estilo para inputs con error */
+.input.error {
+  border-bottom: 1px solid #ff4444;
+}
+
+/* Contenedor para cada campo con su error */
+.campo-grupo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+}
+
+.campo-grupo:last-of-type {
+  border-bottom: none;
+}
+
+/* Estilos para mensajes de error */
+.errores {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0; /* No se encoge */
+}
+
+.error {
+  color: #ff4444;
+  font-size: 0.7rem; /* Un poco más pequeño en mobile */
+  font-weight: 500;
+  white-space: nowrap; /* Evita que el texto se rompa */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.error::before {
+  content: "⚠";
+  font-size: 0.65rem;
+}
+
+/* Estilo para campos con error */
+.campo-grupo.error {
+  border-bottom: 1px solid #ff4444;
+}
+
+.input.error {
+  color: #ff4444;
+}
+
+.form-section {
+  padding: 16px;
+  font-size: .85rem;
+  background-color: #e0ecfb;
+  box-shadow: rgb(0 0 0 / 8%) 0 -1px;
+}
+
+.form-section a {
+  font-weight: bold;
+  color: #0066ff;
+  transition: color .3s ease;
+}
+
+/*Button*/
+.form button {
+  background-color: #0066ff;
+  color: #fff;
+  border: 0;
+  border-radius: 24px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color .3s ease;
+}
+
+.form button:hover {
+  background-color: #005ce6;
+}
+
+/*--------------------------------------------------------------------*/
+
+
+/* Estilos para el teléfono personalizado */
+.telefono-simple {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  background: none;
+  height: 40px;
+  position: relative;
+}
+
+.country-selector {
+  position: relative;
+  height: 100%;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.selected-country {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  height: 100%;
+  font-size: .9rem;
+  color: #374151;
+  border-right: 1px solid #eee;
+  cursor: pointer;
+  background: none;
+  width: 100%;
+}
+
+.country-flag {
+  margin-right: 4px;
+}
+
+.country-code {
+  font-weight: 500;
+}
+
+.selected-country .arrow {
+  font-size: 0.7rem;
+  margin-left: 4px;
+  color: #666;
+}
+
+.country-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 180px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-height: 150px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+}
+
+.country-dropdown.active {
+  display: block;
+}
+
+.country-option {
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+.country-option:last-child {
+  border-bottom: none;
+}
+
+.country-option:hover {
+  background-color: #f1f7fe;
+}
+
+.option-flag {
+  margin-right: 8px;
+  width: 20px;
+}
+
+.option-text {
+  flex: 1;
+}
+
+.input-simple {
+  background: none;
+  border: 0;
+  outline: 0;
+  height: 40px;
+  flex: 1;
+  font-size: .9rem;
+  padding: 8px 35px;
+  min-width: 0;
+}
+
+/* Ocultar el campo original */
+#wtf_telefono {
+  display: none;
+}
+/*--------------------------------------------------------------------*/
+
+/*Estilos para el contenido principal*/
+.contenedor-contenido{
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin:15px 10px;
+}
+/*--------------------------------------------------------------------*/
+
+/*Estilos para las tarjetas que presentan los dispositivos*/
+/* Variables para el acordeón */
+:root {
+  --acordeon-primary: #0066ff;
+  --acordeon-background: #fff;
+  --acordeon-border: #e5e7eb;
+}
+
+/* Estilos para el acordeón de dispositivos */
+.dispositivo-acordeon {
+  background-color: var(--acordeon-background);
+  border-radius: 25px;
+  border: 1px solid var(--acordeon-border);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* Ocultar inputs del acordeón */
+.dispositivo-acordeon input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  z-index: -1;
+}
+
+/* Contenedor principal del acordeón */
+.tab {
+  position: relative;
+}
+
+/* Estilo para la etiqueta/header del acordeón */
+.tab__label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+  min-height: 70px;
+}
+
+.tab__label:hover {
+  background-color: #f9fafb;
+}
+
+/* Contenido del acordeón (inicialmente oculto) */
+.tab__content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease-out;
+  background-color: #f9fafb;
+}
+
+/* Cuando el radio está seleccionado, mostrar contenido */
+.dispositivo-acordeon input[type="radio"]:checked ~ .tab__content {
+  max-height: 200px;
+  padding: 15px 20px;
+  border-top: 1px solid var(--acordeon-border);
+}
+
+/* Estilos para el contenido dentro del acordeón */
+.detalles-dispositivo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detalle-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detalle-item:last-child {
+  border-bottom: none;
+}
+
+.detalle-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.detalle-valor {
+  color: #6b7280;
+}
+
+/* Mantener tus estilos existentes pero ajustados */
+.dispositivo-contenido-superior {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.nombre-dispositivo {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.estado-dispositivo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carga-dispositivo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: #6b7280;
+  font-size: 0.9rem;
+  min-width: 80px;
+}
+
+/* Ajustar tus estilos existentes para dispositivos */
+.dispositivos {
+  background-color: #fff;
+  border-radius: 25px;
+  display: flex;
+  transition: all 0.3s ease;
+}
+.btn-estado {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+}
+/*--------------------------------------------------------------------*/
+
+
+/*Estilos para el menu de opciones*/
+.contenedor-opciones {
+  position: fixed;
+  border-radius: 30px;
+  height: 60px;
+  bottom: 30px;
+  left: 150px;
+  right: 150px;
+  background-color: white;
+}
+
+.opciones ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.opciones li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: #374151;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.icon {
+  width: 45px;
+  height: 45px;
+  cursor: pointer;
+}
+.opciones li:hover .icon {
+  transform: translateY(-3px);
+  transition: all 0.3s ease;  
+}
+/*--------------------------------------------------------------------*/
+
+/*Estilos para el icono de mas*/
+.contenedor-masdispositivo{
+  display: flex;
+  justify-content: flex-end;
+}
+.icon-mas{
+  background-color: transparent;
+  border-color: transparent;
+  margin-top: 15px;
+  margin-right: 15px;
+  cursor: pointer;
+}
+.icon-mas:hover{
+  transform: translateY(-3px);
+  transition: all 0.3s ease;  
+}
+/*--------------------------------------------------------------------*/
+
+/*Estilos para el modal*/
+.modal {
+  display: none; 
+  position: fixed; 
+  z-index: 1; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgb(0,0,0); 
+  background-color: rgba(0,0,0,0.4); 
+}
+.modal-contenido {
+  background-color: #fefefe;
+  margin-left: 30%; 
+  margin-top: 15%;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 40%; 
+}
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+/*--------------------------------------------------------------------*/
+
+/*Para los logs*/
+.opciones-logs{
+  background-color: #fff;
+  border-radius: 25px;
+  display: flex;
+  flex-direction: column;
+  margin-top: 25%;
+  padding: 15px;
+}
+/*--------------------------------------------------------------------*/
+
+/* Estilos para desktop */
+@media (min-width: 933px) {
+  body {
+    background-color: #7af0b5 !important;
+  }
+
+  .form-box {
+    background-color: #fcfcfc;
+    margin: 5% auto;
+    max-width: 400px;
+  }
+
+  .contenedor-principal {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .icon-mas{
+    width: 70px;
+    height: 70px;
+    margin-top: 15px;
+    margin-right: -45px;
+  }
+}
+/*--------------------------------------------------------------------*/

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-box">
+    <form class="form" method="POST">
+        <span class="title">Registro:</span>
+        <div class="form-container">
+            {{ form.csrf_token }}
+            
+            {{ form.email(class_="input", placeholder="correo electrónico") }}
+            {{ form.nombre(class_="input", placeholder="nombre") }}
+            {{ form.apellido(class_="input", placeholder="apellido") }}
+            
+            <!-- Campo de teléfono con dropdown personalizado -->
+            <div class="telefono-simple">
+                {{ form.telefono(id="wtf_telefono", style="display: none;") }}
+                <div class="country-selector">
+                    <div class="selected-country" id="selected-country">
+                        <span class="country-flag">🇺🇸</span>
+                        <span class="country-code">+1</span>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="country-dropdown" id="country-dropdown">
+                        <div class="country-option" data-value="+1" data-flag="🇺🇸" data-code="+1">
+                            <span class="option-flag">🇺🇸</span>
+                            <span class="option-text">USA +1</span>
+                        </div>
+                        <div class="country-option" data-value="+52" data-flag="🇲🇽" data-code="+52">
+                            <span class="option-flag">🇲🇽</span>
+                            <span class="option-text">México +52</span>
+                        </div>
+                        <div class="country-option" data-value="+54" data-flag="🇦🇷" data-code="+54">
+                            <span class="option-flag">🇦🇷</span>
+                            <span class="option-text">Argentina +54</span>
+                        </div>
+                        <div class="country-option" data-value="+55" data-flag="🇧🇷" data-code="+55">
+                            <span class="option-flag">🇧🇷</span>
+                            <span class="option-text">Brasil +55</span>
+                        </div>
+                        <div class="country-option" data-value="+57" data-flag="🇨🇴" data-code="+57">
+                            <span class="option-flag">🇨🇴</span>
+                            <span class="option-text">Colombia +57</span>
+                        </div>
+                    </div>
+                </div>
+                <input type="tel" id="fancy_telefono" placeholder="teléfono" class="input-simple">
+            </div>
+            <div class="campo-grupo">
+                {{ form.passw(class_="input", placeholder="contraseña") }}
+                {% if form.passw.errors %}
+                    <div class="errores">
+                        {% for error in form.passw.errors %}
+                            <span class="error">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <button type="submit">crear cuenta</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var wtf_phone_field = document.getElementById('wtf_telefono');
+        var selectedCountry = document.getElementById('selected-country');
+        var countryDropdown = document.getElementById('country-dropdown');
+        var fancy_phone_field = document.getElementById('fancy_telefono');
+        var countryOptions = document.querySelectorAll('.country-option');
+        
+        var currentCountry = '+1';
+        var currentFlag = '🇺🇸';
+        
+        // Toggle dropdown
+        selectedCountry.addEventListener('click', function(e) {
+            e.stopPropagation();
+            countryDropdown.classList.toggle('active');
+        });
+        
+        // Seleccionar país
+        countryOptions.forEach(function(option) {
+            option.addEventListener('click', function() {
+                var value = this.getAttribute('data-value');
+                var flag = this.getAttribute('data-flag');
+                var code = this.getAttribute('data-code');
+                
+                currentCountry = value;
+                currentFlag = flag;
+                
+                // Actualizar solo la bandera y código (texto fijo)
+                selectedCountry.querySelector('.country-flag').textContent = flag;
+                selectedCountry.querySelector('.country-code').textContent = code;
+                
+                countryDropdown.classList.remove('active');
+                syncPhoneValue();
+            });
+        });
+        
+        // Cerrar dropdown al hacer click fuera
+        document.addEventListener('click', function() {
+            countryDropdown.classList.remove('active');
+        });
+        
+        // Prevenir que el click en el dropdown cierre
+        countryDropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        function syncPhoneValue() {
+            var numero = fancy_phone_field.value;
+            wtf_phone_field.value = currentCountry + numero;
+        }
+        
+        fancy_phone_field.addEventListener('input', syncPhoneValue);
+        fancy_phone_field.addEventListener('blur', syncPhoneValue);
+        
+        syncPhoneValue();
+    });
+</script>
+{% endblock content %}

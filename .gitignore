@@ -1,0 +1,9 @@
+#ignorar cosas del virtual env
+webapp 
+api
+#ignorar pycache
+__pycache__
+#ignorar variables de entorno
+.env
+#ignorar cosas de DB
+app.db
