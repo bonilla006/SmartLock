@@ -32,11 +32,11 @@ asunto = "/smartlock/mqtt/"
 IOT_ID = None
 cliente_mqtt = Mqtt(app)
 # Verificar configuración MQTT cargada
-print("=== CONFIGURACIÓN MQTT ===")
-print(f"MQTT_BROKER_URL: {app.config.get('MQTT_BROKER_URL')}")
-print(f"MQTT_BROKER_PORT: {app.config.get('MQTT_BROKER_PORT')}")
-print(f"MQTT_KEEPALIVE: {app.config.get('MQTT_KEEPALIVE')}")
-print(f"MQTT connected: {cliente_mqtt.connected}")
+# print("=== CONFIGURACIÓN MQTT ===")
+# print(f"MQTT_BROKER_URL: {app.config.get('MQTT_BROKER_URL')}")
+# print(f"MQTT_BROKER_PORT: {app.config.get('MQTT_BROKER_PORT')}")
+# print(f"MQTT_KEEPALIVE: {app.config.get('MQTT_KEEPALIVE')}")
+# print(f"MQTT connected: {cliente_mqtt.connected}")
 ###########################################################################################################
 ############################################CORE###########################################################
 ###########################################################################################################
@@ -369,16 +369,15 @@ def Nuevo_Dispositivo():
 @cliente_mqtt.on_connect()
 def manejador_conexion(client, userdata, flags, rc):
     try:
-        print(f"=== EVENTO ON_CONNECT ===")
         if rc == 0:
-            print("Conexión MQTT exitosa al broker")
             # suscribirse al topico de inicio
             status_inicio = cliente_mqtt.subscribe("smartlock/+/inicio")
             # suscribirse al topico de comandos
             status_comandos = cliente_mqtt.subscribe("smartlock/+/comando")
             # suscribirse al topico de estados
             status_status = cliente_mqtt.subscribe("smartlock/+/respuesta")
-            print(f"Subscripciones: [{status_inicio}], [{status_comandos}], [{status_status}]")
+            # print(f"Subscripciones: [{status_inicio}], [{status_comandos}], [{status_status}]")
+            print(f"=== Conexion a todos los topicos ===")
         else:
             print(f"Error de conexión MQTT: {rc}")
             
