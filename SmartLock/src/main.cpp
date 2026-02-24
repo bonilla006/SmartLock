@@ -1,11 +1,8 @@
+#include "config.h"
 #include <ESP32Servo.h>
 #include <LiquidCrystal_I2C.h>
 #include <Keypad.h>
 #include "mbedtls/md.h"
-#include <WiFi.h>
-#include <PubSubClient.h>
-#include <ArduinoJson.h>
-#define ServoPin 15
 
 // ========== PROTOTIPOS ==========
 void conexionMQTT();
@@ -17,19 +14,16 @@ void displayMessage(const char *line1, const char *line2, int time);
 
 Servo servo;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
 
-const byte ROWS = 4;
-const byte COLS = 4;
-
-char keys[ROWS][COLS] = {
+char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
   {'7', '8', '9', 'c'},
   {'*', '0', '#', 'D'},
 };
-byte rowPins[ROWS] = {23, 19, 18, 5};
-byte colPins[COLS] = {17, 16, 4, 2};
+byte rowPins[KEYPAD_ROWS] = {23, 19, 18, 5};
+byte colPins[KEYPAD_COLS] = {17, 16, 4, 2};
 
 ///////////////////////////////////
 //variables de control
@@ -39,32 +33,12 @@ byte shaResult[32]; //almacena los bytes del hash
 String localpssw = ""; //para poder visualizar y hash
 String hashpssw = "";
 bool pssw_correcto = false;
-byte max_len_passw = 16;
 byte current_len_passw = 0;
 //creacion del objeto Keypad
-Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
-//credenciales para wifi
-const char* SSID = "Wokwi-GUEST";
-const char* PASSW = "";
-
-//credenciales para comunicacion con mqtt
-const char* SERV_MQTT = "broker.hivemq.com";
-const int PORT_MQTT =  1883;
-const char* ASUNTO_MQTT = "/smartlock/mqtt/";
-const String USER_ID = "1";
-const String ASUNTO_INICIO = "smartlock/BFUA-6044/inicio";
-const String ASUNTO_COMANDO = "smartlock/BFUA-6044/comando";
-const String ASUNTO_RESPUESTA = "smartlock/BFUA-6044/respuesta";
 String REL_ID = "";
 String ESTADO = "";
-
-//objeto json
-JsonDocument parser;
-
-//objeto cliente
-WiFiClient smartlock;
-PubSubClient cliente(smartlock);
 ///////////////////////////////////
 
 
@@ -72,23 +46,19 @@ void setup() {
   Serial.begin(115200);
   Serial.println("Conectandoce a internet...");
   //conectarse a internet
-  WiFi.begin(SSID, PASSW);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while(WiFi.status() != WL_CONNECTED){
     Serial.println(WiFi.status());
     delay(2000);
   }
   Serial.println("Conectado al WiFi!");
 
-  //set mqtt
-  cliente.setServer(SERV_MQTT, PORT_MQTT);
-  conexionMQTT();
-
   //mandar mensaje de presentacion
-  String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+USER_ID+"\"}";
-  cliente.publish(ASUNTO_RESPUESTA.c_str(), payload.c_str());
+  String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+String(USER_ID)+"\"}";
+  cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
 
   //conectar el mecanismo con el microprocesador
-  servo.attach(ServoPin);
+  servo.attach(SERVO_PIN);
   servo.write(0);
 
   lcd.init();
@@ -122,8 +92,8 @@ void loop() {
     Serial.println("error con el estado:");
     Serial.println(ESTADO);
     //volver a hacer el ack con el servidor
-    String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+USER_ID+"\"}";
-  cliente.publish(ASUNTO_RESPUESTA.c_str(), payload.c_str());
+    String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+String(USER_ID)+"\"}";
+  cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
   }
 
   //devuelve el digito que se ingreso en el keypad
@@ -145,129 +115,15 @@ void loop() {
       //enviar la data hacia el servidor
       String payload = "{\"acc\":\"serv-val-pssw\",\"rel_id\":\" "+REL_ID+" \",\"pssw\":\"" + hashpssw + "\"}";
       Serial.println(payload);
-      cliente.publish(ASUNTO_COMANDO.c_str(), payload.c_str());
+      cliente.publish(ASUNTO_COMANDO, payload.c_str());
     }
   }
 }
 
-
-/*Funciones para manejo de MQTT*/
-void conexionMQTT(){
-  //si el dispositivo no esta conectado
-  while(!cliente.connected()){
-    Serial.println("Iniciando conexion con broker-mqtt...");
-    if(cliente.connect("wokwi_smartlock")){
-      Serial.println("conexion con broker-mqtt exitosa!");
-      cliente.setCallback(manejadorMensajesMQTT);
-      Serial.println("funcion callback inicializada");
-      cliente.subscribe(ASUNTO_INICIO.c_str());
-      Serial.println("subscrito a los inicios");
-      cliente.subscribe(ASUNTO_COMANDO.c_str());
-      Serial.println("subscrito a los comandos");
-      cliente.subscribe(ASUNTO_RESPUESTA.c_str());
-      Serial.println("subscrito a las respuestas");
-      
-    }else{
-      Serial.print(" failed, rc=");
-      Serial.print(cliente.state());
-      Serial.println("intentar en 5 segundos...");
-      delay(5000);
-    }
-  }
-}
 //String payload = "{\"acc\":\"error\",\"rel_id\":\" "+REL_ID+" \",\"err\":\"el val que recibio el iot fue:"+estado_val+"\"}";
 //cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
 void manejadorMensajesMQTT(char* topic, byte* payload, unsigned int length){
-  String mensaje = "";
-  //recorrer el payload para conseguir el mensaje
-  for (int i = 0; i < length; i++) {
-    mensaje += (char)payload[i]; //transformar byte a char
-  }
   
-  Serial.print("Mensaje recibido en: ");
-  Serial.print(topic);
-  Serial.print(" -> ");
-  Serial.println(mensaje);
-  //parsear el json; aka mensaje
-  DeserializationError err = deserializeJson(parser, mensaje.c_str());
-  switch (err.code()) {
-    case DeserializationError::Ok:
-      Serial.println("Deserialisacion completada");
-      break;
-
-    case DeserializationError::InvalidInput:
-      Serial.print("Input Invalido");
-      break;
-
-    case DeserializationError::NoMemory:
-      Serial.println("No hay memoria");
-      break;
-
-    default:
-      Serial.println("Error fatal");
-      break;
-  }
-  //conseguir la accion
-  String accion = parser["acc"].as<String>();
-  // Procesar según el asunto
-  if (String(topic) == ASUNTO_RESPUESTA) {
-    Serial.println("Procesando respuestas...");
-    
-    //identificacion del servidor con el IoT
-    if(accion == "iot-ack"){
-      //conseguir el id de relacion
-      REL_ID = parser["rel_id"].as<String>();
-      ESTADO = parser["estado"].as<String>();
-
-    }else if(accion == "iot-val-pssw"){
-      //ver si fue correcta a no la contraseña ingresada
-      String estado_val = parser["val"].as<String>();
-      if(estado_val == "exito"){
-        String payload = "{\"acc\":\"serv-dsblk\",\"rel_id\":\" "+REL_ID+" \"}";
-        cliente.publish(ASUNTO_COMANDO.c_str(), payload.c_str());
-
-      }else if(estado_val == "fallo"){
-        String payload = "{\"acc\":\"serv-wrg-pssw\",\"rel_id\":\" "+REL_ID+" \"}";
-        cliente.publish(ASUNTO_RESPUESTA.c_str(), payload.c_str());
-
-      }else{
-        Serial.println("else in val-pssw");
-      }
-    }else if(accion == "iot-dsblk"){
-      ESTADO = parser["estado"].as<String>(); //actualizar estado
-      servo.write(180); //simula que se abrio la cerradura
-    }else{
-      Serial.println("...mas respuestas");
-    }
-  }
-  else if (String(topic) == ASUNTO_COMANDO) {
-    Serial.println("Procesando comandos..."); 
-    //la accion de abrir/cerrar viene del app
-    if(accion == "iot-dsblk"){
-      ESTADO = parser["estado"].as<String>(); //actualizar estado
-      servo.write(180); //simula que se abrio la cerradura
-    }else if(accion == "iot-blk"){
-      ESTADO = parser["estado"].as<String>(); //actualizar estado
-      servo.write(90); //simula que se cerro la cerradura
-
-    }else if(accion == "iot-time-out"){
-      //verificar si tengo intentos
-      String intentos = parser["try"].as<String>();
-      if(intentos == "si"){
-        lcd.clear();
-        displayMessage("No contraseña ", "30seg de bloqueo", parser["time"]);
-        reset();
-      }else{
-        lcd.clear();
-        displayMessage("No contraseña ", "5min de bloqueo", parser["time"]);
-        reset();
-      }
-    }else{
-      Serial.println("...mas comandos");
-    }
-  }else{
-    Serial.println("standby in else");
-  }
 }
 
 String computeSHA256(const String& data) {
@@ -306,7 +162,7 @@ String computeSHA256(const String& data) {
 /*Funciones para manejo del hardware*/
 void procesarDigito(char digito){
   //llenar el posible passw con los digitos ingresados
-  if(current_len_passw < max_len_passw){
+  if(current_len_passw < MAX_PASSW_LEN){
     //mover el cursor segun ingresado
     lcd.setCursor(current_len_passw, 1);
     lcd.print("*");
