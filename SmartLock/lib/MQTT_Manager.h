@@ -38,6 +38,9 @@ public:
     }
     ~MQTTManager();
 
+    //wrapper de la funcion loop de PubSubClient
+    void loop_wrapper(){ iot.loop(); }
+
     //traduce el json
     String translate_json(byte* payload, unsigned int length){
         String mensaje = "";

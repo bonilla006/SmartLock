@@ -37,8 +37,6 @@ byte current_len_passw = 0;
 //creacion del objeto Keypad
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
-String REL_ID = "";
-String ESTADO = "";
 ///////////////////////////////////
 
 
