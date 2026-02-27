@@ -14,11 +14,13 @@ class IoT{
 private:
     int REL_ID = -1;
     bool BLOQUEADO = true;
+    // bool INTENTOS = true;
 
 public:
     IoT(int rel_id, bool bloqueado){
         REL_ID = rel_id;
         BLOQUEADO =  bloqueado;
+        // INTENTOS = intentos;
     }
     ~IoT();
 
@@ -26,7 +28,7 @@ public:
     int get_relationID(){ return REL_ID; }
 
     //inicializa el id de relacion
-    //void set_relationID(int id){ REL_ID = id; }
+    void set_relationID(int id){ REL_ID = id; }
 
     //validar el id de relacion
     bool validate_relationID(int rel_id){ return rel_id > 0; }
@@ -36,6 +38,12 @@ public:
 
     //inicializa o cambia el estado del dispositivo
     void set_block(bool bloqueado){ BLOQUEADO = bloqueado; }
+
+    //verifica si tiene intentos posibles
+    // bool have_trys(){ return INTENTOS; }
+
+    // //elimina la posibilidad de intentos
+    // void no_trys(){ INTENTOS = false; }
 
     
 };

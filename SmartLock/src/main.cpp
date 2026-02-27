@@ -78,6 +78,8 @@ void loop() {
   }
   
   lcd.setCursor(0,0);
+  /////////////////////////////
+  //MOVER ESTO A AL LOGICA DE IOT
   //verificar el estado
   if(ESTADO == "Bloqueado"){
     //simula cerradura cerrada
@@ -93,6 +95,7 @@ void loop() {
     String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+String(USER_ID)+"\"}";
   cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
   }
+  /////////////////////////////
 
   //devuelve el digito que se ingreso en el keypad
   char digito = keypad.getKey();
