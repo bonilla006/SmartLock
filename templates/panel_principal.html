@@ -28,14 +28,7 @@
                                 
                                 <!-- Botón de bloqueo/desbloqueo -->
                                 <div class="estado-dispositivo">
-                                    {% if dispositivo.estado == "Desbloqueado" %}
-                                        <form action="{{ url_for('Bloquear_Dispositivo', rel_id=dispositivo.id) }}" method="POST" class="form-estado">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf }}">
-                                            <button type="submit" class="btn-estado">
-                                                <img class="icon" src="{{ url_for('static', filename='image/icons8-unlock-50.png') }}" alt="Bloquear Dispositivo">
-                                            </button>
-                                        </form>
-                                    {% elif dispositivo.estado == "Bloqueado" %}
+                                    {% if dispositivo.bloqueado %}
                                         <form action="{{ url_for('Desbloquear_Dispositivo', rel_id=dispositivo.id) }}" method="POST" class="form-estado">
                                             <input type="hidden" name="csrf_token" value="{{ csrf }}">
                                             <button type="submit" class="btn-estado">
@@ -43,9 +36,12 @@
                                             </button>
                                         </form>
                                     {% else %}
-                                        <div class="estado-error">
-                                            <img class="icon" alt="Error Fatal" src="{{ url_for('static', filename='image/icons8-error-50.png') }}">
-                                        </div>
+                                         <form action="{{ url_for('Bloquear_Dispositivo', rel_id=dispositivo.id) }}" method="POST" class="form-estado">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf }}">
+                                            <button type="submit" class="btn-estado">
+                                                <img class="icon" src="{{ url_for('static', filename='image/icons8-unlock-50.png') }}" alt="Bloquear Dispositivo">
+                                            </button>
+                                        </form>
                                     {% endif %}
                                 </div>
                                 

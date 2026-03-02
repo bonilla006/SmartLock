@@ -215,7 +215,7 @@ def Panel_Control():
                 'id':info.id,
                 'nombre':info.alias if info.alias else info.name,
                 # 'encendido':info.encendido,
-                'bloquead':info.bloqueado,
+                'bloqueado':info.bloqueado,
                 'carga':info.bateria,
                 'logs':infologs
             }
