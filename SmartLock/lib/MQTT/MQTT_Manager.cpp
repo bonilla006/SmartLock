@@ -1,14 +1,35 @@
 #include "MQTT_Manager.h"
 #include "IoT.h"
 
-//interactua con el objeto IoT
+//guarda la direccion del objeto para que MQTTManager pueda interactuar
+//con los metodos de los otros objetos
 void MQTTManager::use_IoT(IoT* dispositivo){ p_dispositivo = dispositivo; }
 
+//se identifica con el API
+void MQTTManager::handshake(){
+    String payload = "";
+    parser["acc"] = "serv-ack";
+    parser["user_id"] = "1";
+    serializeJson(parser, payload);
+    cliente.publish(RESPUESTA, payload.c_str());
+    Serial.print("ACK enviado");
+}
+
+//mandar la constraseña hash a el API
+void MQTTManager::validate_pssw(){
+    String payload = "";
+    parser["acc"] = "serv-val-pssw";
+    parser["rel_id"] = p_dispositivo->get_relationID();
+    parser["pssw"] = p_dispositivo->get_hashpssw();
+    serializeJson(parser, payload);
+    cliente.publish(COMANDO, payload.c_str());
+}
+
 //wrapper de la funcion loop de PubSubClient
-void MQTTManager::loop_wrapper(){ iot.loop(); }
+void MQTTManager::loop_wrapper(){ cliente.loop(); }
 
 //traduce el json
-String translate_json(byte* payload, unsigned int length){
+String MQTTManager::translate_json(byte* payload, unsigned int length){
     String mensaje = "";
     //recorrer el payload para conseguir el mensaje
     for (int i = 0; i < length; i++) {
@@ -52,7 +73,7 @@ String MQTTManager::read_message(const char* mensaje){
 //maneja el envio del mensaje
 
 //maneja las respuestas
-void MQTTManager::response(const char* accion, IoT* dispositivo){
+void MQTTManager::response(String accion, IoT* dispositivo){
     Serial.println("Procesando respuestas...");
     String payload = "";
     int rel_id = -1;
@@ -65,7 +86,8 @@ void MQTTManager::response(const char* accion, IoT* dispositivo){
         dispositivo->set_relationID(rel_id);
 
         //conseguir el estado inicial
-        bloqueado = parser["estado"]; //recibo un valor bool
+        bloqueado = parser["bloqueado"]; //recibo un valor bool
+        Serial.print(bloqueado);
         dispositivo->set_block(bloqueado);
 
     }else if(accion == "iot-val-pssw"){
@@ -75,28 +97,28 @@ void MQTTManager::response(const char* accion, IoT* dispositivo){
             parser["acc"] = "serv-dsblk";
             parser["rel_id"] = dispositivo->get_relationID();
             serializeJson(parser, payload);
-            iot.publish(COMANDO, payload.c_str());
+            cliente.publish(COMANDO, payload.c_str());
 
         }else if(estado_val == "fallo"){
             parser["acc"] = "serv-wrg-pssw";
             parser["rel_id"] = dispositivo->get_relationID();
             serializeJson(parser, payload);
-            iot.publish(RESPUESTA, payload.c_str());
+            cliente.publish(RESPUESTA, payload.c_str());
 
         }else{
             Serial.println("else in val-pssw");
         }
     }else if(accion == "iot-dsblk"){
-        bloqueado = parser["estado"]; //recibo un valor bool
+        bloqueado = parser["bloqueado"]; //recibo un valor bool
         dispositivo->set_block(bloqueado);
-        //servo.write(180); //simula que se abrio la cerradura
+        dispositivo->open(); 
     }else{
         Serial.println("...mas respuestas");
     }
 }
 
 //maneja los comandos
-void MQTTManager::command(const char* accion, IoT* dispositivo){
+void MQTTManager::command(String accion, IoT* dispositivo){
     Serial.println("Procesando comandos..."); 
     String payload = "";
     int rel_id = -1;
@@ -105,25 +127,25 @@ void MQTTManager::command(const char* accion, IoT* dispositivo){
 
     //la accion de abrir/cerrar viene del app
     if(accion == "iot-dsblk"){
-        bloqueado = parser["estado"]; //recibo un valor bool
+        bloqueado = parser["bloqueado"]; //recibo un valor bool
         dispositivo->set_block(bloqueado);
-        //servo.write(180); //simula que se abrio la cerradura
+        dispositivo->open(); 
+
     }else if(accion == "iot-blk"){
-        bloqueado = parser["estado"]; //recibo un valor bool
+        bloqueado = parser["bloqueado"]; //recibo un valor bool
         dispositivo->set_block(bloqueado);
-        //servo.write(90); //simula que se cerro la cerradura
+        dispositivo->close();
 
     }else if(accion == "iot-time-out"){
         //verificar si tengo intentos
         intentos = parser["try"];
         if(intentos){
-            // lcd.clear();
-            // displayMessage("No contraseña ", "30seg de bloqueo", parser["time"]);
-            // reset();
+            dispositivo->display("wrong!", "timeout(30seg)", parser["time"]);
+            dispositivo->reset();
+
         }else{
-            // lcd.clear();
-            // displayMessage("No contraseña ", "5min de bloqueo", parser["time"]);
-            // reset();
+            dispositivo->display("wrong!", "timeout(5min)", parser["time"]);
+            dispositivo->reset();
         }
     }else{
         Serial.println("...mas comandos");
@@ -148,10 +170,10 @@ void MQTTManager::message_manager(char* topic, byte* payload, unsigned int lengt
 
     // Procesar según el asunto
     if (String(topic) == RESPUESTA) {
-        response(accion.c_str(), p_dispositivo);
+        response(accion, p_dispositivo);
 
     }else if (String(topic) == COMANDO) {
-        command(accion.c_str(), p_dispositivo);
+        command(accion, p_dispositivo);
 
     }else{
         Serial.println("standby in else");
@@ -160,26 +182,27 @@ void MQTTManager::message_manager(char* topic, byte* payload, unsigned int lengt
 
 //maneja la conexion a los asuntos
 void MQTTManager::topic_conection(){
-    while(!iot.connected()){
+    while(!cliente.connected()){
         Serial.println("Iniciando conexion con broker-mqtt...");
-        if(iot.connect("wokwi_smartlock")){
+        if(cliente.connect("wokwi_smartlock")){
             Serial.println("conexion con broker-mqtt exitosa!");
 
-            iot.setCallback(staticCallback);
+            cliente.setCallback(staticCallback);
             Serial.println("funcion callback inicializada");
 
-            iot.subscribe(INICIO);
+            cliente.subscribe(INICIO);
             Serial.println("subscrito a los inicios");
 
-            iot.subscribe(COMANDO);
+            cliente.subscribe(COMANDO);
             Serial.println("subscrito a los comandos");
 
-            iot.subscribe(RESPUESTA);
+            cliente.subscribe(RESPUESTA);
             Serial.println("subscrito a las respuestas");
-        
+            
+            handshake();
         }else{
             Serial.print(" failed, rc=");
-            Serial.print(iot.state());
+            Serial.print(cliente.state());
             Serial.println("intentar en 5 segundos...");
             delay(5000);
         }

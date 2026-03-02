@@ -1,21 +1,12 @@
 #include "config.h"
-#include <ESP32Servo.h>
-#include <LiquidCrystal_I2C.h>
+#include "MQTT_Manager.h"
+#include "IoT.h"
 #include <Keypad.h>
 #include "mbedtls/md.h"
 
-// ========== PROTOTIPOS ==========
-void conexionMQTT();
-void manejadorMensajesMQTT(char* topic, byte* payload, unsigned int length);
-String computeSHA256(const String& data);
-void procesarDigito(char digito);
-void reset();
-void displayMessage(const char *line1, const char *line2, int time);
-
-Servo servo;
-
-LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS);
-
+Servo servo; //mecanismo de cerradura
+LiquidCrystal_I2C lcd(LCD_ADDR, LCD_COLS, LCD_ROWS); //pantalla
+//Keypad
 char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
   {'1', '2', '3', 'A'},
   {'4', '5', '6', 'B'},
@@ -24,21 +15,15 @@ char keys[KEYPAD_ROWS][KEYPAD_COLS] = {
 };
 byte rowPins[KEYPAD_ROWS] = {23, 19, 18, 5};
 byte colPins[KEYPAD_COLS] = {17, 16, 4, 2};
-
-///////////////////////////////////
-//variables de control
-bool isDoorLocked = true;
-byte shaResult[32]; //almacena los bytes del hash
-// 48754849
-String localpssw = ""; //para poder visualizar y hash
-String hashpssw = "";
-bool pssw_correcto = false;
-byte current_len_passw = 0;
 //creacion del objeto Keypad
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, KEYPAD_ROWS, KEYPAD_COLS);
 
-///////////////////////////////////
+//clases propias
+MQTTManager mssg_manager(MQTT_BROKER, MQTT_PORT, ASUNTO_INICIO, ASUNTO_COMANDO, ASUNTO_RESPUESTA);
+IoT dispositivo(-1, true);
 
+byte shaResult[32]; //almacena los bytes del hash
+String computeSHA256(const String& data);
 
 void setup() {
   Serial.begin(115200);
@@ -51,13 +36,12 @@ void setup() {
   }
   Serial.println("Conectado al WiFi!");
 
-  //mandar mensaje de presentacion
-  String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+String(USER_ID)+"\"}";
-  cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
-
   //conectar el mecanismo con el microprocesador
   servo.attach(SERVO_PIN);
   servo.write(0);
+
+  mssg_manager.use_IoT(&dispositivo);
+  mssg_manager.handshake();
 
   lcd.init();
   lcd.backlight();
@@ -70,32 +54,15 @@ void setup() {
 
 void loop() {
   //mantener la comunicacion
-  cliente.loop();
-  
+  mssg_manager.loop_wrapper();
+
   //validar que no se haya cortado la comunicacion
-  if(!cliente.connected()){
-    conexionMQTT();
-  }
+  mssg_manager.topic_conection();
   
   lcd.setCursor(0,0);
-  /////////////////////////////
-  //MOVER ESTO A AL LOGICA DE IOT
+  
   //verificar el estado
-  if(ESTADO == "Bloqueado"){
-    //simula cerradura cerrada
-    servo.write(90); 
-    lcd.print("Contraseña:");
-  }else if(ESTADO == "Desbloqueado"){
-    servo.write(180);
-    lcd.print("Bienvenido!");
-  }else{
-    Serial.println("error con el estado:");
-    Serial.println(ESTADO);
-    //volver a hacer el ack con el servidor
-    String payload = "{\"acc\":\"serv-ack\",\"user_id\":\""+String(USER_ID)+"\"}";
-  cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
-  }
-  /////////////////////////////
+  dispositivo.status();
 
   //devuelve el digito que se ingreso en el keypad
   char digito = keypad.getKey();
@@ -106,25 +73,17 @@ void loop() {
     if(digito != '*'){
       Serial.println(digito);
       //procesar el codigo ingresado
-      procesarDigito(digito);
+      dispositivo.proces_passw(digito);
     }else{
       lcd.clear();
-      
+      //conseguir la contraseña en texto plano
       //hash la contraseña
-      hashpssw = computeSHA256(localpssw);
-      Serial.println(hashpssw);
+      dispositivo.set_hashpssw(computeSHA256(dispositivo.get_localpssw()));
+
       //enviar la data hacia el servidor
-      String payload = "{\"acc\":\"serv-val-pssw\",\"rel_id\":\" "+REL_ID+" \",\"pssw\":\"" + hashpssw + "\"}";
-      Serial.println(payload);
-      cliente.publish(ASUNTO_COMANDO, payload.c_str());
+      mssg_manager.validate_pssw();
     }
   }
-}
-
-//String payload = "{\"acc\":\"error\",\"rel_id\":\" "+REL_ID+" \",\"err\":\"el val que recibio el iot fue:"+estado_val+"\"}";
-//cliente.publish(ASUNTO_RESPUESTA, payload.c_str());
-void manejadorMensajesMQTT(char* topic, byte* payload, unsigned int length){
-  
 }
 
 String computeSHA256(const String& data) {
@@ -157,35 +116,3 @@ String computeSHA256(const String& data) {
   return hashdata;
 
 }
-
-/*---------------------------------------------------------------*/
-
-/*Funciones para manejo del hardware*/
-void procesarDigito(char digito){
-  //llenar el posible passw con los digitos ingresados
-  if(current_len_passw < MAX_PASSW_LEN){
-    //mover el cursor segun ingresado
-    lcd.setCursor(current_len_passw, 1);
-    lcd.print("*");
-    localpssw += digito;
-    current_len_passw++;
-  }
-}
-
-void reset(){
-  current_len_passw = 0;
-  localpssw = "";
-  lcd.clear();
-  lcd.setCursor(0, 0);
-}
-
-void displayMessage(const char *line1, const char *line2, int time) {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print(line1);
-  lcd.setCursor(0, 1);
-  lcd.print(line2);
-  delay(time);
-  lcd.clear();
-}
-/*---------------------------------------------------------------*/

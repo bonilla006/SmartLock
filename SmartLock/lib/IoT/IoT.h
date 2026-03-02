@@ -1,6 +1,7 @@
 #ifndef IoT_H
 #define IoT_H
-
+#include <LiquidCrystal_I2C.h>
+#include <ESP32Servo.h>
 /*
 La clase IoT es responsable de almacenar informacion crucial:
 - necesita de:
@@ -15,6 +16,10 @@ private:
     int REL_ID = -1;
     bool BLOQUEADO = true;
     // bool INTENTOS = true;
+    
+    String localpssw = ""; // 48754849, para poder visualizar y hash
+    String hashpssw = "";
+    byte current_len_passw = 0;
 
 public:
     IoT(int rel_id, bool bloqueado){
@@ -22,30 +27,57 @@ public:
         BLOQUEADO =  bloqueado;
         // INTENTOS = intentos;
     }
-    ~IoT();
+    //~IoT();
 
     //consigue el id de relacion
-    int get_relationID(){ return REL_ID; }
+    int get_relationID();
 
-    //inicializa el id de relacion
-    void set_relationID(int id){ REL_ID = id; }
+    //define el id de relacion
+    void set_relationID(int );
 
     //validar el id de relacion
-    bool validate_relationID(int rel_id){ return rel_id > 0; }
+    bool validate_relationID(int );
 
     //consigue el estado del dispositivo
-    bool is_block(){ return BLOQUEADO; }
+    bool is_block();
 
-    //inicializa o cambia el estado del dispositivo
-    void set_block(bool bloqueado){ BLOQUEADO = bloqueado; }
+    //define o cambia el estado del dispositivo
+    void set_block(bool );
+
+    //consigue la contraseña en texto plano
+    String get_localpssw();
+
+    //define la contraseña en texto plano
+    //void set_localpssw(String );
+
+    //consigue la contraseña hash
+    String get_hashpssw();
+
+    //define la constraseña hash
+    void set_hashpssw(String );
 
     //verifica si tiene intentos posibles
-    // bool have_trys(){ return INTENTOS; }
+    // bool have_trys();
 
-    // //elimina la posibilidad de intentos
-    // void no_trys(){ INTENTOS = false; }
+    //elimina la posibilidad de intentos
+    // void no_trys();
 
+    //limpia contraseña ingresada
+    void reset();
+
+    //despliega informacion
+    void display(const char* ,const char* ,int );
     
-};
+    //abrir cerradura
+    void open();
 
+    //cerrar cerradura
+    void close();
+
+    //maneja el estado del dispositivo
+    void status();
+
+    //procesa la contraseña
+    void proces_passw(char );
+};
 #endif 
