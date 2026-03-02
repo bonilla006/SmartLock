@@ -73,7 +73,7 @@ def poblar_tablas():
                 usuario_id=usuario1.id, 
                 codigo="8c34f8ce0a50e63100f1681cd5597bf037ba20fe4298d78bfc14f146ef9bca85",
                 encendido=True,
-                estado="Bloqueado", 
+                bloqueado=True, 
                 alias="Puerta Principal",
                 bateria=89,
                 intentos=0
@@ -83,7 +83,7 @@ def poblar_tablas():
                 usuario_id=usuario1.id, 
                 codigo="58948749", 
                 encendido=True,
-                estado="Bloqueado",
+                bloqueado=True,
                 alias="Patio",
                 bateria=90,
                 intentos=0  
@@ -93,7 +93,7 @@ def poblar_tablas():
                 usuario_id=usuario2.id, 
                 codigo="26284686",
                 encendido=True,
-                estado="Bloqueado", 
+                bloqueado=True, 
                 alias="Oficina de Jorge",
                 bateria=10,
                 intentos=0

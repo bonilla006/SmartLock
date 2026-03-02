@@ -215,7 +215,7 @@ def Panel_Control():
                 'id':info.id,
                 'nombre':info.alias if info.alias else info.name,
                 # 'encendido':info.encendido,
-                'estado':info.estado.value,
+                'bloquead':info.bloqueado,
                 'carga':info.bateria,
                 'logs':infologs
             }
@@ -259,11 +259,11 @@ def Bloquear_Dispositivo(rel_id):
             return redirect(url_for('Panel_Control'))
         
         #publicar comando para bloquear dispositivo
-        ret_payload = {"acc":"iot-blk", "estado":"Bloqueado"}
+        ret_payload = {"acc":"iot-blk", "bloqueado":True}
         cliente_mqtt.publish(f"smartlock/{dispositivo.iot.id_modelo}/comando", json.dumps(ret_payload))
 
         #actualizar el estado del dispositivo de desbloqueado a bloqueado
-        dispositivo.estado = "Bloqueado"
+        dispositivo.bloqueado = True
         db.session.commit()
 
         #crear log
@@ -289,10 +289,10 @@ def Desbloquear_Dispositivo(rel_id):
             return redirect(url_for('Panel_Control'))
         
         #publicar comando para desbloquear el dispositivo
-        ret_payload = {"acc":"iot-dsblk", "estado":"Desbloqueado"}
+        ret_payload = {"acc":"iot-dsblk", "bloqueado":False}
         cliente_mqtt.publish(f"smartlock/{dispositivo.iot.id_modelo}/comando", json.dumps(ret_payload))
 
-        dispositivo.estado = "Desbloqueado"
+        dispositivo.bloqueado = False
         db.session.commit()
         
         #crear log
@@ -328,7 +328,7 @@ def Nuevo_Dispositivo():
                     usuario_id=u_id.id, 
                     codigo=sha256(form.codigo.data.encode()).hexdigest(),
                     encendido=True,
-                    estado="Bloqueado", 
+                    bloqueado=True, 
                     alias=form.nombre.data,
                     bateria=100
                 )
@@ -413,7 +413,7 @@ def manejador_mensajes_mqtt(client, userdata, message):
 
                         if relacion:
                             #publicar el id de relacion
-                            ret_payload = {"acc":"iot-ack","rel_id":relacion.id, "estado":relacion.estado.value}
+                            ret_payload = {"acc":"iot-ack","rel_id":relacion.id, "bloqueado":relacion.bloqueado}
                             cliente_mqtt.publish(f"smartlock/{IOT_ID}/respuesta", json.dumps(ret_payload))
                         else:
                             print(f"problema al buscar la relacion {IOT_ID}-{user_id}")
@@ -490,7 +490,7 @@ def manejador_mensajes_mqtt(client, userdata, message):
                             print("error al buscar la relacion en el comando val-pssw:", err)
 
                         #cambiar el estado del dispositivo
-                        relacion.estado = "Desbloqueado"
+                        relacion.bloqueado = False
                         db.session.commit()
                         
                         nuevo_log = iotlogs(iot_id=data['rel_id'], instante=datetime.now(), acceso="ACK", accion="DBLCK")
@@ -498,7 +498,7 @@ def manejador_mensajes_mqtt(client, userdata, message):
                         db.session.commit()
 
                     #mandar mensaje para que se ejecute el mecanismo de desbloqueo
-                    ret_payload = {"acc":"iot-dsblk", "estado":"Desbloqueado"}
+                    ret_payload = {"acc":"iot-dsblk", "bloqueado":False}
                     cliente_mqtt.publish(f"smartlock/{IOT_ID}/respuesta", json.dumps(ret_payload))
         else:
             pass

@@ -28,18 +28,13 @@ class Usuarios(db.Model, UserMixin):
         return f"U: {self.email}"
 
 #modelo para unir dispositivos y usuarios   
-ESTADO_OPERACIONAL = [
-    ('Desbloqueado', 'Desbloqueado'),
-    ('Bloqueado', 'Bloqueado'),
-    ('Err', 'Error')
-]
 class iot_usuario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     iot_id = db.Column(db.Integer, db.ForeignKey("dispositivos.id"))
     usuario_id = db.Column(db.Integer, db.ForeignKey("usuarios.id"))
     codigo = db.Column(db.String(length=150))
     encendido = db.Column(db.Boolean, default=False) 
-    estado = db.Column(ChoiceType(ESTADO_OPERACIONAL))
+    bloqueado = db.Column(db.Boolean, default=True)
     alias = db.Column(db.String(150))
     bateria = db.Column(db.Integer)
     intentos = db.Column(db.Integer)
